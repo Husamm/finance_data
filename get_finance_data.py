@@ -20,7 +20,8 @@ class GetFinanceData:
             polygon_aggs = self.client.get_aggs(ticker=ticker, from_=from_date.strftime("%Y-%m-%d"),
                                                 to=to_date.strftime("%Y-%m-%d"), limit=5000, multiplier=1,
                                                 timespan='day')
-        except:
+        except Exception as error:
+            print('-E- ', error)
             return None
         return list(map(lambda polygon_agg: Aggregate(polygon_agg), polygon_aggs))
 
@@ -46,6 +47,11 @@ class Aggregate:
     def __repr__(self):
         return self.__str__()
 
+    def to_csv_map(self):
+        agg_time = datetime.fromtimestamp(self.timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
+        return {'time': agg_time, 'open': str(self.open),
+                'close': str(self.close), 'high': str(self.high), 'low': str(self.low), 'volume': str(self.volume)}
+
 
 class QuarterlyEarnings:
     def __str__(self):
@@ -61,6 +67,14 @@ class QuarterlyEarnings:
         self.reported_EPS = float(json_obj['reportedEPS'])
         self.reported_date = datetime.strptime(json_obj['reportedDate'], '%Y-%m-%d')
         self.fiscal_date_ending = datetime.strptime(json_obj['fiscalDateEnding'], '%Y-%m-%d')
+
+    def to_csv_map(self):
+        return {'surprise_percentage': str(self.surprise_percentage),
+                'surprise': str(self.surprise),
+                'estimated_EPS': str(self.estimated_EPS),
+                'reported_EPS': str(self.reported_EPS),
+                'reported_date': self.reported_date.strftime('%Y-%m-%d'),
+                'fiscal_date_ending': self.fiscal_date_ending.strftime('%Y-%m-%d')}
 
     @staticmethod
     def parse_json_list(json_list):
