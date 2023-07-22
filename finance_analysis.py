@@ -5,14 +5,10 @@ YEARS_BACK = 2.0
 
 
 def EPS_announcements_to_price_change(ticker):
-    print("-HHH- 8")
     EPS_announcements = GetFinanceData().get_EPS_annoucments(ticker)
-    print("-HHH- 10")
     result_map = {}
     for announcement in EPS_announcements:
-        print("-HHH- 13")
         percentage_change = get_stock_percentage_change(ticker, announcement.reported_date)
-        print("-HHH- 15")
         if percentage_change is None:
             continue
         result_map[announcement.reported_date] = [announcement, percentage_change]
@@ -22,7 +18,6 @@ def EPS_announcements_to_price_change(ticker):
 def get_stock_percentage_change(ticker, date):
     if (datetime.now() - date).days > YEARS_BACK * 365:
         return None
-
     aggs = GetFinanceData().get_ticker_aggs(ticker, date,
                                 date + timedelta(days=1))
     if aggs is None:
