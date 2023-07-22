@@ -28,3 +28,4 @@ def write_to_csv_file(csv_file, field_names, rows):
         writer = csv.DictWriter(f, fieldnames=field_names)
         writer.writeheader()
         writer.writerows(rows)
+
