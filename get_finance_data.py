@@ -15,6 +15,12 @@ class GetFinanceData:
     def __init__(self):
         self.client = RESTClient(POLYGON_API_KEY)
 
+    def is_valid_ticker_name(self, ticker_name):
+        try:
+            return len(list(self.client.list_tickers(ticker=ticker_name))) != 0
+        except Exception as err:
+            return 0
+
     def get_ticker_aggs(self, ticker, from_date, to_date):
         try:
             polygon_aggs = self.client.get_aggs(ticker=ticker, from_=from_date.strftime("%Y-%m-%d"),
