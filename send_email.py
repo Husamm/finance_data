@@ -9,10 +9,9 @@ PASSWORD = 'jobtkqatnghccmoy'
 
 
 class EmailReport:
-    sender_email = ''
+    sender_email = 'husamdevacc183@gmail.com'
     receiver_email = ''
     subject = ''
-    receiver_email = ''
     attached_file_path = ''
     email_body = ''
 

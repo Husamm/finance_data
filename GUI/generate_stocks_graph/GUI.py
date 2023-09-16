@@ -1,6 +1,11 @@
 import tkinter as tk
+import matplotlib.pyplot as plt
+import re
+import io
+from PIL import Image
+from email.mime.image import MIMEImage
 from tkinter import messagebox
-
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkcalendar import Calendar
 from datetime import datetime, timedelta
 
@@ -20,6 +25,8 @@ def clear_root(root):
 
 class ChooseFromToDates:
     def __init__(self):
+
+        self.fig = None
         self.bloc = GenerateStocksGraphBloc()
         self.bloc.add_listener(lambda state: self.update_gui(state))
         self.root = tk.Tk()
@@ -27,6 +34,7 @@ class ChooseFromToDates:
         self.from_date_calendar = None
         self.stock_entry = None
         self.stock_list = None
+        self.email_entry = None
         self.create_root_window()
         self.add_header()
         self.create_calendars()
@@ -37,13 +45,13 @@ class ChooseFromToDates:
         if self.stock_list is not None:
             self.stock_list.delete(0, tk.END)
             for ticker in state.stocks_list:
-                self.stock_list.insert("end",ticker)
+                self.stock_list.insert("end", ticker)
 
     def create_root_window(self):
         self.root.title("View Stock Graph")
 
         width, height = get_screen_size(self.root)
-        half_width, half_height = width // 2, height // 2
+        half_width, half_height = int(width * (3 / 4)), int(height * (3 / 4))
         x_offset = (width - half_width) // 2
         y_offset = (height - half_height) // 2
         self.root.geometry(f"{half_width}x{half_height}+{x_offset}+{y_offset}")
@@ -137,8 +145,47 @@ class ChooseFromToDates:
         self.stock_entry.delete(0, tk.END)
 
     def generate_graph(self, stock_list):
+        self.stock_list = None
+        self.bloc.generate_graph_data()
 
-        pass
+        clear_root(self.root)
+
+        self.fig, ax = plt.subplots()
+        ax.plot(self.bloc.state.x_data, self.bloc.state.y_data)
+        # Set labels and title
+        ax.set_xlabel('X-axis')
+        ax.set_ylabel('Y-axis')
+        ax.set_title('Graph')
+
+        # Calculate the desired height for the graph (one-third of the window's height)
+        window_height = self.root.winfo_height()
+        graph_height = window_height * (2 / 3)
+
+        # Embed the plot in a tkinter window
+        canvas = FigureCanvasTkAgg(self.fig, master=self.root)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.configure(height=graph_height)
+        canvas_widget.pack(pady=20)
+
+        # Create a label and entry field for the email address
+        email_label = tk.Label(self.root, text="Mail:", font=("Arial", 12))
+        email_label.pack()
+        self.email_entry = tk.Entry(self.root, font=("Arial", 12))
+        self.email_entry.pack(pady=20)
+
+        # Create a "Send Mail" button
+        send_mail_button = tk.Button(self.root, text="Send Mail", font=("Arial", 12), command=lambda: self.send_mail())
+        send_mail_button.pack(pady=20)
 
     def clear_stocks_list(self):
         self.bloc.clear_stocks_list()
+
+    def send_mail(self):
+        # Save the figure to a BytesIO object
+        self.fig.savefig('fig.png')
+        email = self.email_entry.get()
+        if re.search(r'[\w.]+\@[\w.]+', email):
+            self.bloc.send_email(email, 'fig.png')
+
+        else:
+            messagebox.showerror("showerror", 'invalid email')

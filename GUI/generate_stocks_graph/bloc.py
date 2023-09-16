@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, date
 
+from finance_analysis import get_combined_aggs
 from get_finance_data import GetFinanceData
+from send_email import EmailReport
 
 
 class GenerateStocksGraphState:
@@ -8,6 +10,8 @@ class GenerateStocksGraphState:
         self.from_date = datetime.now() - timedelta(days=5)
         self.to_date = datetime.now()
         self.stocks_list = []
+        self.x_data = []
+        self.y_data = []
 
 
 class GenerateStocksGraphError:
@@ -46,6 +50,25 @@ class GenerateStocksGraphBloc:
         for listener in self._listeners:
             listener(self.state)
 
+    def generate_graph_data(self):
+        aggs = get_combined_aggs(self.state.stocks_list, self.state.from_date, self.state.to_date)
+        sorted_keys = sorted(aggs.keys())
+        start_date = datetime.fromtimestamp(sorted_keys[0] / 1000)
+        for i in range(len(sorted_keys)):
+            key = sorted_keys[i]
+            value = aggs[key]
+            i_date = datetime.fromtimestamp(key / 1000)
+            self.state.x_data.insert(i, (i_date - start_date).days)
+            self.state.y_data.insert(i, (value.open + value.close) / 2.0)
+
+    def send_email(self, email, attach_path):
+        email_report = EmailReport()
+        email_report.receiver_email = email
+        email_report.subject = 'Graph for stocks : '
+        for stock_i in self.state.stocks_list:
+            email_report.subject += stock_i + ' '
+        email_report.attached_file_path = attach_path
+        email_report.send()
+
     def add_listener(self, listener):
         self._listeners.append(listener)
-

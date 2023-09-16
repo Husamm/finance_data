@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from get_finance_data import GetFinanceData
 
 YEARS_BACK = 2.0
@@ -26,7 +26,7 @@ def get_stock_percentage_change(ticker, date):
 
 
 def get_combined_aggs(tickers_list, from_date, to_date):
-    if (datetime.now() - from_date).days > YEARS_BACK * 365:
+    if (date.today() - from_date).days > YEARS_BACK * 365:
         return None
     tickers_maps = []
     for i in range(len(tickers_list)):
